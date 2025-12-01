@@ -42,6 +42,10 @@ namespace top{
   frame_t build_frame(const p_t*ps, size_t s);
 
   char* build_convas(frame_t f);
+
+  void point_canvas(char* cnv, frame_t fr, const p_t* ps, size_t k, char f);
+
+  void print_canvas(const char* cnv, frame_t fr);
 }
 
 int main(){
@@ -49,17 +53,27 @@ int main(){
   IDraw* f[3] = {};
   p_t* p = nullptr;
   size_t s = 0;
+  int err = 0;
+  char * cnv = nullptr;
   try{
     make_f(f,3);
     for(size_t i = 0; i < 3; ++i){
       get_points(f[i], &p, s);
     }
     frame_t fr = build_frame(p, s);
-    char * cnv = build_convas(fr);
+    cnv = build_convas(fr);
+    point_canvas(cnv, fr, p, s, '#');
+    print_canvas(cnv, fr);
   }
   catch(...){
-
+    err = 0;
   }
+  delete f[0];
+  delete f[1];
+  delete f[2];
+  delete [] p;
+  delete [] cnv;
+  return err;
 }
 top::Dot::Dot(int x, int y):
   IDraw(),
