@@ -11,6 +11,7 @@ namespace top{
   {  
     virtual p_t begin() const = 0 ;
     virtual p_t next(p_t) const = 0;
+    virtual ~IDraw();
   };
   
   bool operator==(p_t a, p_t b){
@@ -26,13 +27,12 @@ namespace top{
     p_t next(p_t) const override;
     p_t o;
     Dot(int x, int y);
-    ~IDraw() = default;
   };
 
 
   struct frame_t{
-    p_t left_bot;
-    p_t right_top;
+    p_t aa;
+    p_t bb;
   };
 
   void make_f(IDraw** b, size_t k);
@@ -64,42 +64,71 @@ namespace top{
     if (!s){
       throw std::logic_error("bad size");
     }
-    int minx = pts[0].x, maxx = minx;
-    int miny = pts[0].y, maxy = miny;
+    int minx = pts[0].x;int maxx = minx;
+    int miny = pts[0].y;int  maxy = miny;
     for(size_t i = 1; i < s; i++){
       minx = std::min(minx,pts[i].x);
       maxx = std::max(maxx,pts[i].x);
       miny = std::min(miny,pts[i].y);
       maxy = std::max(maxy,pts[i].y);
     }
-    p_t aa(minx, miny);
-    p_t bb(maxx, maxy);
+    p_t aa{minx, miny};
+    p_t bb{maxx, maxy};
     return {aa, bb};
   }
 
-  char* build_convas(frame_t f);
+  size_t rows(frame_t fr){
+    return (fr.bb.y - fr.aa.y + 1);
+  }
 
-  void point_canvas(char* cnv, frame_t fr, const p_t* ps, size_t k, char f);
+  size_t cols(frame_t fr){
+    return (fr.bb.x - fr.aa.x + 1);
+  }
+  char* build_convas(frame_t fr, char fill){
+    char* cnv = new char (rows(fr) * cols(fr));
+    for ( size_t i = 0; i < rows(fr); ++i ){
+      cnv[i] = fill;
+  
+    }
+    return cnv;
+  }
 
-  void print_canvas(const char* cnv, frame_t fr);
+  void point_canvas(char* cnv, frame_t fr, const p_t ps, size_t k, char f){
+    int dx = ps.x - fr.aa.x;
+    int dy = fr.bb.y - ps.y;
+    cnv[dy * cols(fr) + dx] = f;
+  }
+
+  void print_canvas(std :: ostream& os, const char* cnv, frame_t fr){
+    for(size_t i = 0; i < rows(fr); i++){
+      for(size_t j = 0; j < cols(fr); j++){
+        os << cnv[i * cols(fr) + j];
+      }
+      os << "\n";
+    }
+  }
 }
 
 int main(){
   using namespace top;
   IDraw* f[3] = {};
-  p_t* p = nullptr;
+  p_t** p = nullptr;
   size_t s = 0;
   int err = 0;
+  char fill = '#';
   char * cnv = nullptr;
   try{
+    f[0] = new Dot({0, 0});
+    f[1] = new Dot({2, 3});
+    f[2] = new Dot({-5, -2});
     make_f(f,3);
     for(size_t i = 0; i < 3; ++i){
-      get_points(f[i], &p, s);
+      get_points(*f[i], p, s);
+      frame_t fr = build_frame(*p, s);
+      cnv = build_convas(fr, fill);
+      point_canvas(cnv, fr, *p[i], s, fill);
+      print_canvas(std :: cout, cnv, fr);
     }
-    frame_t fr = build_frame(p, s);
-    cnv = build_convas(fr);
-    point_canvas(cnv, fr, p, s, '#');
-    print_canvas(cnv, fr);
   }
   catch(...){
     err = 0;
