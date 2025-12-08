@@ -47,6 +47,15 @@ namespace top{
     delete[] *ps;
     }
 
+    void append(const IDraw* sh, p_t** ppts, size_t& s) {
+    extend(ppts, s, sh->begin());
+    p_t b = sh->begin();
+    while (sh->next(b) != sh->begin()) {
+      b = sh->next(b);
+      extend(ppts, s, b);
+    }
+  }
+
   size_t get_points(IDraw& d, p_t** ps, size_t & s){
     p_t p = d.begin();
     extend(ps,s,p);
@@ -84,7 +93,7 @@ namespace top{
   size_t cols(frame_t fr){
     return (fr.bb.x - fr.aa.x + 1);
   }
-  char* build_convas(frame_t fr, char fill){
+  char* build_canvas(frame_t fr, char fill){
     char* cnv = new char (rows(fr) * cols(fr));
     for ( size_t i = 0; i < rows(fr); ++i ){
       cnv[i] = fill;
@@ -93,7 +102,7 @@ namespace top{
     return cnv;
   }
 
-  void point_canvas(char* cnv, frame_t fr, const p_t ps, size_t k, char f){
+  void point_canvas(char* cnv, frame_t fr, const p_t ps, char f){
     int dx = ps.x - fr.aa.x;
     int dy = fr.bb.y - ps.y;
     cnv[dy * cols(fr) + dx] = f;
@@ -110,34 +119,32 @@ namespace top{
 }
 
 int main(){
-  using namespace top;
-  IDraw* f[3] = {};
-  p_t** p = nullptr;
-  size_t s = 0;
+using namespace top;
   int err = 0;
-  char fill = '#';
-  char * cnv = nullptr;
-  try{
-    f[0] = new Dot({0, 0});
-    f[1] = new Dot({2, 3});
-    f[2] = new Dot({-5, -2});
-    make_f(f,3);
-    for(size_t i = 0; i < 3; ++i){
-      get_points(*f[i], p, s);
-      frame_t fr = build_frame(*p, s);
-      cnv = build_convas(fr, fill);
-      point_canvas(cnv, fr, *p[i], s, fill);
-      print_canvas(std :: cout, cnv, fr);
+  IDraw* shp[3] = {};
+  p_t * pts = nullptr;
+  size_t s = 0;
+  try {
+    shp[0] = new Dot({0, 0});
+    shp[1] = new Dot({2, 3});
+    shp[2] = new Dot({-5, -2});
+    for (size_t i = 0; i < 3; ++i) {
+      append(shp[i], &pts, s);
     }
+    frame_t fr = build_frame(pts, s);
+    char * cnv = build_canvas(fr, '.');
+    for (size_t i = 0; i < s; ++i) {
+      point_canvas(cnv, fr, pts[i], '#');
+    }
+    print_canvas(std::cout, cnv, fr);
+    delete [] cnv;
+  } catch (...) {
+    std::cerr << "Error!\n";
+    err = 1;
   }
-  catch(...){
-    err = 0;
-  }
-  delete f[0];
-  delete f[1];
-  delete f[2];
-  delete [] p;
-  delete [] cnv;
+  delete shp[2];
+  delete shp[1];
+  delete shp[0];
   return err;
 }
 top::Dot::Dot(int x, int y):
