@@ -5,7 +5,7 @@ namespace top{
     int x;
     int y;
   };
-
+ 
 
   struct IDraw
   {  
@@ -26,7 +26,7 @@ namespace top{
     p_t next(p_t) const override;
     p_t o;
     Dot(int x, int y);
-
+    ~IDraw() = default;
   };
 
 
@@ -37,9 +37,45 @@ namespace top{
 
   void make_f(IDraw** b, size_t k);
 
-  void get_points(IDraw* b, p_t** ps, size_t & s);
+  void extend(p_t** ps, size_t s, p_t p){
+    size_t upd_s = s + 1;
+    p_t* res = new p_t [upd_s];
+    for (size_t i = 0; i < s; i++){
+      res[i] = (*ps)[i];
+    }
+    res[s] = p;
+    delete[] *ps;
+    }
 
-  frame_t build_frame(const p_t*ps, size_t s);
+  size_t get_points(IDraw& d, p_t** ps, size_t & s){
+    p_t p = d.begin();
+    extend(ps,s,p);
+    size_t delta = 1;
+
+    while (d.next(p) != d.begin()){
+      p = d.next(p);
+      extend(ps, s + delta, p);
+      ++delta;
+    }
+    return delta;
+  } 
+
+  frame_t build_frame(const p_t*pts, size_t s){
+    if (!s){
+      throw std::logic_error("bad size");
+    }
+    int minx = pts[0].x, maxx = minx;
+    int miny = pts[0].y, maxy = miny;
+    for(size_t i = 1; i < s; i++){
+      minx = std::min(minx,pts[i].x);
+      maxx = std::max(maxx,pts[i].x);
+      miny = std::min(miny,pts[i].y);
+      maxy = std::max(maxy,pts[i].y);
+    }
+    p_t aa(minx, miny);
+    p_t bb(maxx, maxy);
+    return {aa, bb};
+  }
 
   char* build_convas(frame_t f);
 
